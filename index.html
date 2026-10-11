@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#15594d">
+  <meta name="description" content="Secure Google Sign-In and private Jalali calendar for daily extraction tracking.">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Daymark · Daily extraction tracker</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="config.js" defer></script>
+  <script src="assets/jalali.js" defer></script>
+  <script src="assets/rpc.js" defer></script>
+  <script src="assets/dashboard.js" defer></script>
+  <script src="assets/history.js" defer></script>
+  <script src="assets/admin.js" defer></script>
+  <script src="assets/auth.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="auth-body">
+  <div id="login-screen" class="auth-layout">
+    <section class="auth-brand" aria-label="About Daymark">
+      <div class="brand-wordmark brand-wordmark-light"><span class="logo-mark">D<span></span></span><span>daymark<span class="brand-dot">.</span></span></div>
+      <div class="auth-visual">
+        <p class="auth-kicker"><span class="live-dot"></span> A focused daily workflow</p>
+        <h1>Every day has<br><em>a number.</em><br>Make it count.</h1>
+        <p>Track extracted data across six Jalali years, with a dedicated three-minute window for every selected date.</p>
+        <div class="visual-calendar" aria-hidden="true">
+          <div class="visual-calendar-head"><span>مهر ۱۴۰۵</span><span class="visual-calendar-arrows">‹ &nbsp; ›</span></div>
+          <div class="visual-calendar-grid">
+            <span class="tiny-weekday">ش</span><span class="tiny-weekday">ی</span><span class="tiny-weekday">د</span><span class="tiny-weekday">س</span><span class="tiny-weekday">چ</span><span class="tiny-weekday">پ</span><span class="tiny-weekday">ج</span>
+            <span class="tiny-date">۱</span><span class="tiny-date tiny-complete">۲</span><span class="tiny-date">۳</span><span class="tiny-date">۴</span><span class="tiny-date tiny-complete">۵</span><span class="tiny-date">۶</span><span class="tiny-date">۷</span>
+            <span class="tiny-date">۸</span><span class="tiny-date tiny-complete">۹</span><span class="tiny-date">۱۰</span><span class="tiny-date">۱۱</span><span class="tiny-date">۱۲</span><span class="tiny-date tiny-complete">۱۳</span><span class="tiny-date">۱۴</span>
+            <span class="tiny-date">۱۵</span><span class="tiny-date tiny-complete">۱۶</span><span class="tiny-date">۱۷</span><span class="tiny-date">۱۸</span><span class="tiny-date">۱۹</span><span class="tiny-date tiny-active">۲۰</span><span class="tiny-date tiny-active">۲۱</span>
+          </div>
+        </div>
+      </div>
+      <div class="auth-brand-footer">1400/01/01 — 1405/12/29 <span>•</span> Your data stays yours</div>
+    </section>
+    <main class="auth-content">
+      <div class="auth-form-shell">
+        <div class="mobile-brand brand-wordmark"><span class="logo-mark">D<span></span></span><span>daymark<span class="brand-dot">.</span></span></div>
+        <p class="eyebrow">Welcome to Daymark</p>
+        <h2>Sign in to your workspace</h2>
+        <p class="form-intro">Your calendar, independent countdowns, and saved daily counts are kept in a private Google Sheet.</p>
+        <div id="login-error" role="alert" class="form-error" hidden></div>
+        <div class="google-login-area">
+          <div id="google-signin-button" aria-label="Sign in with Google"></div>
+          <p id="login-help" class="signin-caption" aria-live="polite">Sign in to open your own calendar and saved records.</p>
+        </div>
+        <div class="security-note"><span aria-hidden="true">◈</span> Google handles your password. Your data is stored in a private Sheet with per-user access checks.</div>
+      </div>
+    </main>
+  </div>
+
+  <div id="dashboard" class="app-shell" hidden>
+    <header class="site-header"><div class="container header-inner">
+      <a href="#calendar" class="brand-wordmark" data-show-dashboard aria-label="Daymark home"><span class="logo-mark">D<span></span></span><span>daymark<span class="brand-dot">.</span></span></a>
+      <nav class="site-actions" aria-label="Account actions">
+        <a href="#history" data-show-history class="nav-history">All records <span aria-hidden="true">↗</span></a>
+        <a href="#admin" data-show-admin class="nav-history admin-nav-link" hidden>Admin review <span aria-hidden="true">↗</span></a>
+        <div class="user-chip"><span class="avatar" data-user-avatar>G</span><span class="username" data-user-name>Google user</span></div>
+        <button class="logout-button" type="button" data-logout>Sign out</button>
+      </nav>
+    </div></header>
+    <main class="container dashboard-main">
+      <section class="dashboard-intro">
+        <div>
+          <p class="eyebrow">Your private workspace <span class="eyebrow-line"></span> 1400–1405 SH</p>
+          <h1>Daily extraction <span class="heading-light">tracker</span></h1>
+          <p class="intro-subtitle">Every date, every count, all in one place. Select a day to start a three-minute counting window.</p>
+        </div>
+        <span class="period-chip"><span class="chip-indicator"></span> Jalali calendar <span class="period-range">1400 → 1405</span></span>
+      </section>
+      <section class="stat-grid" aria-label="Your totals">
+        <div class="stat-card stat-card-primary"><div class="stat-card-caption">Approved data extracted</div><div class="stat-number" id="stat-total">—</div><div class="stat-bottom">Counts verified by the administrator <span aria-hidden="true">↗</span></div></div>
+        <div class="stat-card"><div class="stat-card-caption">Approved days</div><div class="stat-number" id="stat-days">—</div><div class="stat-bottom">Accepted in your personal history <span aria-hidden="true">✓</span></div></div>
+        <div class="stat-card"><div class="stat-card-caption">Awaiting review</div><div class="stat-number" id="stat-pending">—</div><div class="stat-bottom">Submitted, pending admin approval <span aria-hidden="true">◷</span></div></div>
+        <div class="stat-card"><div class="stat-card-caption">Active timers</div><div class="stat-number" id="stat-active">—</div><div class="stat-bottom">Independent 03:00 sessions <span class="running-indicator" aria-hidden="true"></span></div></div>
+      </section>
+      <div class="workspace-grid">
+        <section class="panel calendar-panel" aria-labelledby="calendar-heading">
+          <div class="panel-heading calendar-header"><div><div class="section-kicker">01 / Calendar</div><h2 id="calendar-heading">Your daily overview</h2><p class="panel-subtitle">Check an available date to begin. Each day may be claimed by only one user at a time.</p></div><div class="calendar-header-actions"><button class="quiet-button" type="button" id="refresh-calendar">Refresh ↻</button><button class="quiet-button" type="button" id="today-button">Current month</button></div></div>
+          <div class="calendar-toolbar">
+            <div class="calendar-period-selectors">
+              <label class="sr-only" for="month-select">Jalali month</label>
+              <select id="month-select" class="period-select">
+                <option value="1">Farvardin · فروردین</option><option value="2">Ordibehesht · اردیبهشت</option><option value="3">Khordad · خرداد</option>
+                <option value="4">Tir · تیر</option><option value="5">Mordad · مرداد</option><option value="6">Shahrivar · شهریور</option>
+                <option value="7">Mehr · مهر</option><option value="8">Aban · آبان</option><option value="9">Azar · آذر</option>
+                <option value="10">Dey · دی</option><option value="11">Bahman · بهمن</option><option value="12">Esfand · اسفند</option>
+              </select>
+              <label class="sr-only" for="year-select">Jalali year</label>
+              <select id="year-select" class="period-select period-year"><option value="1400">1400</option><option value="1401">1401</option><option value="1402">1402</option><option value="1403">1403</option><option value="1404">1404</option><option value="1405">1405</option></select>
+            </div>
+            <div class="month-navigation"><button type="button" class="arrow-button" id="prev-month" aria-label="Previous month">‹</button><button type="button" class="arrow-button" id="next-month" aria-label="Next month">›</button></div>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true">
+            <div>Sat <small>شنبه</small></div><div>Sun <small>یکشنبه</small></div><div>Mon <small>دوشنبه</small></div><div>Tue <small>سه‌شنبه</small></div><div>Wed <small>چهارشنبه</small></div><div>Thu <small>پنجشنبه</small></div><div>Fri <small>جمعه</small></div>
+          </div>
+          <div id="calendar-grid" class="calendar-grid" aria-live="polite"><div class="loading-calendar">Loading your calendar…</div></div>
+          <div class="legend-row" aria-label="Calendar legend"><span><i class="legend-dot legend-complete"></i> Approved</span><span><i class="legend-dot legend-pending"></i> Pending review</span><span><i class="legend-dot legend-active"></i> Timer running</span><span><i class="legend-dot legend-occupied"></i> Claimed by another user</span><span><i class="legend-dot legend-empty"></i> Available</span></div>
+          <p class="calendar-footnote">Submitted dates remain checked while under review. Pending submissions can be edited with a new 3-minute timer. Approved claims are locked. If the admin rejects a claim, it disappears from the user’s history and the date becomes available again.</p>
+        </section>
+        <aside class="sidebar">
+          <section class="panel timer-panel" aria-labelledby="timers-heading">
+            <div class="panel-heading sidebar-heading"><div><div class="section-kicker">02 / Live sessions</div><h2 id="timers-heading">Your countdowns</h2></div><span id="timer-count-badge" class="count-badge">0</span></div>
+            <p class="sidebar-description">Each selected day gets its own three minutes. Timers continue if you leave or reload.</p>
+            <div class="timer-list" id="timer-list"><div class="empty-placeholder"><span class="placeholder-clock">◷</span><strong>No timers running</strong><p>Choose one or more dates in the calendar to start.</p></div></div>
+          </section>
+          <section class="panel activity-panel" aria-labelledby="activity-heading">
+            <div class="panel-heading sidebar-heading"><div><div class="section-kicker">03 / Recent activity</div><h2 id="activity-heading">Your recent claims</h2></div><a class="text-link" data-show-history href="#history">View all ↗</a></div>
+            <div id="recent-list" class="activity-list"><p class="muted">Your submissions will appear here.</p></div>
+          </section>
+        </aside>
+      </div>
+      <footer class="app-footer"><span>DAYMARK / DAILY EXTRACTION</span><span>1400/01/01 — 1405/12/29 &nbsp; · &nbsp; Google Sheets storage</span></footer>
+    </main>
+  </div>
+
+  <div id="history-screen" hidden>
+    <header class="site-header"><div class="container header-inner">
+      <a href="#calendar" data-show-dashboard class="brand-wordmark"><span class="logo-mark">D<span></span></span><span>daymark<span class="brand-dot">.</span></span></a>
+      <nav class="site-actions"><a href="#calendar" data-show-dashboard class="nav-history">← Calendar</a><a href="#admin" data-show-admin class="nav-history admin-nav-link" hidden>Admin review ↗</a><div class="user-chip"><span class="avatar" data-user-avatar>G</span><span class="username" data-user-name>Google user</span></div><button type="button" class="logout-button" data-logout>Sign out</button></nav>
+    </div></header>
+    <main class="container history-main">
+      <p class="eyebrow">Your personal history <span class="eyebrow-line"></span> Submitted dates (pending + approved)</p>
+      <div class="history-title-row"><div><h1>Extraction records</h1><p class="intro-subtitle">Review submitted counts and their approval status, or export them as CSV.</p></div><button type="button" id="export-csv" class="primary-button history-export">Export CSV <span aria-hidden="true">↗</span></button></div>
+      <div class="history-stat-row"><div><span>Submitted days</span><strong id="history-days">—</strong></div><div><span>Approved data count</span><strong id="history-total">—</strong></div></div>
+      <section class="panel history-table-panel">
+        <div class="history-table-header"><div><div class="section-kicker">RECORDS</div><h2>Saved dates and counts</h2></div><div class="year-filter-row"><label class="sr-only" for="year-filter">Filter by year</label><select id="year-filter" class="period-select"><option value="">All years</option><option value="1400">Year 1400</option><option value="1401">Year 1401</option><option value="1402">Year 1402</option><option value="1403">Year 1403</option><option value="1404">Year 1404</option><option value="1405">Year 1405</option></select><button type="button" class="quiet-button" id="history-apply-filter">Filter</button></div></div>
+        <div class="table-scroll"><table class="records-table"><thead><tr><th scope="col">Jalali date</th><th scope="col">Data count</th><th scope="col">Last saved (UTC)</th><th scope="col">Review status</th><th scope="col">Calendar</th></tr></thead><tbody id="history-table-body"><tr><td colspan="5" class="history-empty">Loading records…</td></tr></tbody></table></div>
+        <div class="history-pagination"><span id="history-page-label">Page 1 of 1</span><div><button type="button" id="history-prev" class="quiet-button">← Previous</button><button type="button" id="history-next" class="quiet-button">Next →</button></div></div>
+      </section>
+      <p id="history-error" class="form-error" hidden></p>
+      <footer class="app-footer"><span>DAYMARK / YOUR RECORDS</span><span>Private to your account</span></footer>
+    </main>
+  </div>
+
+  <div id="admin-screen" hidden>
+    <header class="site-header"><div class="container header-inner">
+      <a href="#calendar" data-show-dashboard class="brand-wordmark"><span class="logo-mark">D<span></span></span><span>daymark<span class="brand-dot">.</span></span></a>
+      <nav class="site-actions"><a href="#calendar" data-show-dashboard class="nav-history">← Calendar</a><a href="#history" data-show-history class="nav-history">My records</a><div class="user-chip"><span class="avatar" data-user-avatar>G</span><span class="username" data-user-name>Admin</span></div><button type="button" class="logout-button" data-logout>Sign out</button></nav>
+    </div></header>
+    <main class="container history-main admin-main">
+      <p class="eyebrow">Administrator workspace <span class="eyebrow-line"></span> Verified Google account only</p>
+      <div class="history-title-row"><div><h1>Review extraction claims</h1><p class="intro-subtitle">Approve valid counts, or reject inaccurate claims to remove them from history and free their date for another user.</p></div><button type="button" id="admin-refresh" class="quiet-button">Refresh queue ↻</button></div>
+      <section class="admin-stat-grid" aria-label="All users' review counts">
+        <div class="admin-metric"><span>Awaiting approval</span><strong id="admin-pending">—</strong></div>
+        <div class="admin-metric"><span>Approved claims</span><strong id="admin-approved">—</strong></div>
+        <div class="admin-metric"><span>Rejected decisions</span><strong id="admin-rejected">—</strong></div>
+      </section>
+      <section class="panel history-table-panel admin-list-panel" aria-label="Review queue">
+        <div class="admin-review-toolbar">
+          <div class="admin-filter-field"><label for="admin-status">Show</label><select id="admin-status" class="period-select"><option value="PENDING">Pending</option><option value="APPROVED">Approved</option><option value="ALL">All current claims</option></select></div>
+          <form id="admin-search-form" class="admin-search-form"><label class="sr-only" for="admin-search">Search a date or a user</label><input id="admin-search" type="search" maxlength="100" placeholder="Search user, email, or Jalali date"><button type="submit" class="primary-button">Search</button></form>
+        </div>
+        <div id="admin-error" class="form-error admin-error" role="alert" hidden></div>
+        <p class="admin-notice">Pending claims reserve their day. Approved claims stay locked. Rejection is immediately effective, including for previously approved claims. Enter a reason before rejecting.</p>
+        <div class="table-scroll"><table class="records-table admin-records-table"><thead><tr><th>Claimed day / user</th><th>Extracted data</th><th>Review status</th><th>Decision</th></tr></thead><tbody id="admin-table-body"><tr><td class="history-empty" colspan="4">Loading review queue…</td></tr></tbody></table></div>
+        <div class="history-pagination"><span id="admin-page-label">Page 1 of 1</span><div><button type="button" id="admin-prev" class="quiet-button">← Previous</button><button type="button" id="admin-next" class="quiet-button">Next →</button></div></div>
+      </section>
+      <p class="admin-footnote">Every decision is recorded in the private <strong>Review Log</strong> Google Sheet. Rejected claims are removed from the user’s current records and approved totals; the audit log retains the decision and reason.</p>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "daymark-sheets-pages",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Google Sign-In, GitHub Pages, Apps Script, and Google Sheets powered Jalali date tracker",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "check": "node --check assets/jalali.js && node --check assets/rpc.js && node --check assets/auth.js && node --check assets/dashboard.js && node --check assets/history.js && node --check assets/admin.js && node --check --input-type=commonjs < apps-script/Code.gs"
+  }
+}
