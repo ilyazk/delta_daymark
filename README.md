@@ -1,177 +1,172 @@
-# Daymark v3 — GitHub Pages + Google Sign-In + Google Sheets + Administrator Review
+<div align="center">
+  <img src="./favicon.svg" alt="Daymark logo" width="72" />
 
-Daymark is a mobile-friendly Jalali-calendar website for collecting **daily extraction counts** from **1400/01/01 through 1405/12/29**. Participants use Google Sign-In, independently timed three-minute sessions, a personal dashboard, and a CSV-exportable history. Every submission is subject to administrator review. The administrator can approve or reject claims in the website **or directly from the private Google Sheet**.
+  # Daymark
 
-There is **no Python backend or always-running server**. The static site is hosted on GitHub Pages; a Google Apps Script Web App validates sign-ins, runs permission checks, enforces server-side timers, and reads/writes a private Google Sheet.
+  **Every day has a number. Make it count.**
 
-## 1. How reviewing works
+  A collaborative daily data-extraction tracker built around the **Jalali (Persian) calendar**,
+  three-minute counting sessions, and administrator-verified submissions.
 
-| Phase | User calendar | Personal history | Approved statistics | Availability to others |
-| --- | --- | --- | --- | --- |
-| Not claimed | Empty checkbox | No record | Unchanged | Available |
-| Counting (up to 3 min) | Checked + timer | No record yet | Unchanged | Temporarily reserved |
-| Submitted — **PENDING** | Checked / amber | Visible as pending | Not yet counted | Reserved |
-| Admin **APPROVES** | Checked / green | Visible as approved | Count and approved-day total increase | Taken |
-| Admin **REJECTS** (pending or approved) | Empty again | **Removed from the user's current history** | Any prior approved amount is subtracted | **Released to everyone** |
+  <p>
+    <a href="https://ilyazk.github.io/delta_daymark/"><strong>Open Daymark ↗</strong></a>
+    &nbsp;·&nbsp;
+    <a href="#-getting-started"><strong>Get started</strong></a>
+    &nbsp;·&nbsp;
+    <a href="docs/DEPLOYMENT.md"><strong>Deployment guide</strong></a>
+  </p>
 
-**Only one participant may claim a given day at a time.** Reservation is globally enforced by Apps Script, not merely the browser checkbox. An expired or canceled timer releases an unsubmitted day. Pending records may be edited with a new three-minute timer, but approved records cannot be changed by participants. The admin can later reject even an approved claim.
+  <p>
+    <img alt="GitHub Pages" src="https://img.shields.io/badge/Frontend-GitHub%20Pages-243B36?logo=github&logoColor=white" />
+    <img alt="Google Sign-In" src="https://img.shields.io/badge/Auth-Google%20Sign--In-243B36?logo=google&logoColor=white" />
+    <img alt="Google Sheets" src="https://img.shields.io/badge/Storage-Google%20Sheets-243B36?logo=googlesheets&logoColor=white" />
+    <img alt="Google Apps Script" src="https://img.shields.io/badge/Logic-Apps%20Script-243B36?logo=google&logoColor=white" />
+  </p>
+</div>
 
-Rejection **deletes** the claim from `Daily Records`, but an audit entry (old count, account ID, date, reason, admin, time) is preserved in the **administrator-only** `Review Log` tab. Rejected records do not appear in participants' personal history or CSV exports.
+---
 
-**Counting vs. reviewing:** A three-minute deadline applies only to data entry. Admin review is not timed.
+## ✨ What is Daymark?
 
-## 2. Source-code layout
+**Daymark** gives a team a shared, date-based workflow for recording how many items of data were extracted on a particular day. It replaces scattered spreadsheets and ambiguous progress reports with a visual calendar, individual timed submissions, and a final administrator decision.
 
-- `index.html` — Google Sign-In, Jalali calendar, personal history, and administrator review screen
-- `config.js` — *public* Google OAuth Web Client ID and Apps Script deployment URL
-- `assets/dashboard.js` — global date availability, pending/approved checkboxes, multiple live countdowns
-- `assets/history.js` — the participant's pending/approved history and CSV export
-- `assets/admin.js` — admin review queue, filters, searching, approval/rejection controls
-- `assets/auth.js` — Google Sign-In and navigation (admin UI shown only if bootstrap authorizes the user)
-- `assets/rpc.js` — form/iframe transport between GitHub Pages and Apps Script
-- `assets/jalali.js` — 72-month Jalali calendar calculations
-- `apps-script/Code.gs` — verified identity, server-side access controls, global reservations, timer checks, admin decisions, migration, sheet menu, review audit
-- `apps-script/appsscript.json` — Apps Script runtime and scopes
-- `tests/` — local mock integration tests; run `npm test`
+It covers **1400/01/01–1405/12/29** on the Persian calendar, with leap-year handling. Participants sign in with their Google accounts; each date can be actively claimed by **only one participant at a time**.
 
-## 3. Deploy / upgrade
+Every submitted count starts as **Pending**. An administrator verifies the work, then either **approves** it toward the participant's verified total or **rejects** it so the date can be reassigned. Rejected claims disappear from participant history, while an internal review log preserves the decision.
 
-For an existing installation, also see **`UPGRADE_FROM_V2.md`** for a short step-by-step migration checklist.
+## 🖥️ Interface preview
 
-### Step A — GitHub Pages (public website, private data)
+<div align="center">
+  <a href="previews/dashboard-layout-reference.png">
+    <img src="previews/dashboard-layout-reference.png" alt="Daymark desktop dashboard layout with Jalali calendar, daily totals, and independent timers" width="900" />
+  </a>
+  <br />
+  <sub>Desktop dashboard — sample data and layout reference.</sub>
+</div>
 
-1. Unzip the project. Push its website files to a GitHub repository. Do not push Google passwords, Sheets edit credentials, API secrets, or your spreadsheet URL.
-2. In **Repository Settings → Pages**, choose **Deploy from a branch**, select your branch and the root (`/`).
-3. The site will be available at `https://YOUR_USERNAME.github.io/REPOSITORY/` (or your custom domain). A private GitHub repository does **not** by itself make the published Pages website private; users must sign in to see their private data.
+<details>
+  <summary><strong>📱 View the mobile layout</strong></summary>
+  <br />
+  <div align="center">
+    <img src="previews/mobile-dashboard-layout-reference.png" alt="Daymark responsive mobile calendar and countdown layout" width="320" />
+    <br />
+    <sub>Mobile layout — sample data and layout reference.</sub>
+  </div>
+</details>
 
-### Step B — Private Google Sheet
+> The preview images illustrate the interface layout using sample numbers. They may not show every current v3 review status or administrator control.
 
-1. Create a **private** Google spreadsheet owned by your administrator account. Do not share it with the participants.
-2. Copy its ID from the spreadsheet URL (`.../spreadsheets/d/SPREADSHEET_ID/edit`).
-3. In the spreadsheet itself, open **Extensions → Apps Script** (this creates a *spreadsheet-bound* project, needed for the native `Daymark review` menu).
-4. Replace `Code.gs` with the **entire** `apps-script/Code.gs` from this package. Set the Apps Script manifest to the supplied `apps-script/appsscript.json` or use equivalent scopes.
+## ✅ What you can do
 
-**Upgrading from v2:** Use the **same private spreadsheet** if you want to preserve existing users/records. First make a **backup copy** of the spreadsheet. The new `setupSheets()` migrates the old three-tab layout in place and creates a `Review Log` tab. No historic claim is silently approved: **all old records become `PENDING`**. Previously accumulated totals temporarily become zero approved counts until reviewed. Earlier versions allowed different people to submit the *same* day; such legacy collisions must be resolved manually by rejecting unwanted claims before approving the survivor. Migration neither automatically deletes a participant's prior claim nor arbitrarily picks a winner.
+| Participant workspace | Administrator workspace |
+| :--- | :--- |
+| Sign in with a Google account | Review all submitted date claims |
+| Browse all 72 Jalali months (1400–1405) | Approve accurate extraction counts |
+| Select available dates on the calendar | Reject unsatisfactory claims with a reason |
+| Run several **independent 3-minute timers** | Revoke previously approved claims |
+| Submit a count before each timer expires | Reopen rejected dates for other participants |
+| Track pending and approved work | Review decisions directly in Google Sheets |
+| View personal history and export CSV | Inspect the private review/audit log |
 
-### Step C — Google OAuth Client
+**Designed for shared work:** A reserved, pending, or approved date cannot be independently claimed by another participant. An expired or canceled, unsubmitted session frees the date again.
 
-1. In **Google Cloud Console**, create or select a Cloud project.
-2. Configure the Google Auth Platform consent screen as appropriate for your audience. For a Testing-mode external application, add participant Google accounts as test users as required by Google's current policies.
-3. Create an **OAuth Client ID → Web application**.
-4. Under **Authorized JavaScript origins**, add `https://YOUR_USERNAME.github.io` (or exactly your custom HTTPS origin). **Do not add the `/REPOSITORY/` path.** Local tests can additionally use `http://localhost:8000`.
-5. Copy the Web Client ID ending in `.apps.googleusercontent.com`. You do not need the OAuth client secret in this project.
+## 🔄 How the review workflow works
 
-### Step D — Apps Script configuration (IMPORTANT)
-
-In **Apps Script → Project Settings → Script properties**, set:
-
-| Property | Example | Required? |
-| --- | --- | --- |
-| `SPREADSHEET_ID` | `1abc...` | **Yes** |
-| `GOOGLE_CLIENT_ID` | `123-xyz.apps.googleusercontent.com` | **Yes** |
-| `FRONTEND_ORIGIN` | `https://YOUR_USERNAME.github.io` | **Yes** |
-| `ADMIN_GOOGLE_EMAIL` | `owner@gmail.com` | **Yes** |
-| `ADMIN_GOOGLE_SUB` | `1098000...` | Optional extra protection |
-
-**ADMIN_GOOGLE_EMAIL** must be the administrator's Google account. Every admin endpoint checks it **on the server** against the verified Google identity. You cannot obtain administrator access by setting `is_admin` in browser JavaScript or by claiming an admin email in an API request.
-
-For stronger role binding, set **ADMIN_GOOGLE_SUB** to the immutable numeric Google Subject ID shown for the administrator in the private `Users` tab after they sign in to Daymark once. When it is configured, *both* the verified email and Subject ID must match.
-
-`FRONTEND_ORIGIN` is the **origin only** (e.g. `https://someone.github.io`), without path or trailing slash. For local testing you can temporarily use `http://localhost:8000` and then restore the real origin for production.
-
-1. **Run `setupSheets()` in the Apps Script editor** and authorize the script. It creates/migrates all required tabs without deleting old records.
-2. **Reload the Google Sheet** to see the new **Daymark review** menu.
-3. Choose **Deploy → Manage deployments → Edit** if upgrading; choose a **new script version** and Deploy. If starting fresh, choose **Deploy → New deployment → Web app**.
-4. Choose **Execute as: Me** and **Who has access: Anyone**. Users don't need spreadsheet edit permissions. The public Web App endpoint checks Google-issued ID tokens on every operation; only its owner can edit the spreadsheet.
-5. Copy the Web App URL ending in `/exec`.
-
-> **Security note:** An Apps Script URL with access set to `Anyone` is publicly reachable, but does **not** make the data public. Data APIs verify each token server-side and bind records to the verified Google Subject, while administrator endpoints additionally check `ADMIN_GOOGLE_EMAIL` and optionally `ADMIN_GOOGLE_SUB`. The hostname/origin check alone is never treated as authentication.
-
-### Step E — Public `config.js`
-
-Edit `config.js` in the GitHub repository:
-
-```javascript
-window.DAYMARK_CONFIG = Object.freeze({
-  GOOGLE_CLIENT_ID: "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec",
-});
+```mermaid
+flowchart TD
+    A([Available date]) --> B[Participant starts a 3-minute timer]
+    B --> C{Count submitted in time?}
+    C -- No --> A
+    C -- Yes --> D[Pending review]
+    D --> E{Administrator decision}
+    E -- Approve --> F[Approved: verified total increases]
+    E -- Reject --> G[Rejected: removed from current history]
+    F --> H{Later revoked?}
+    H -- Yes --> G
+    H -- No --> I([Date remains claimed])
+    G --> J[Decision kept in private Review Log]
+    J --> A
 ```
 
-These are public IDs/URLs, not secrets. Push your update. Visit GitHub Pages and sign in with Google. Only the configured administrator sees the **Admin review** link in the navigation bar.
+The **three-minute limit applies to entry**, not administrator review. Timer deadlines and claim ownership are enforced by Apps Script rather than trusting the browser's clock.
 
-## 4. Administrator operations
+## 🧩 How it works behind the scenes
 
-**From the website** (as admin):
+```mermaid
+flowchart LR
+    P[Participant browser] --> UI[GitHub Pages<br/>Static website]
+    UI <--> GIS[Google Sign-In]
+    UI <--> AS[Google Apps Script<br/>Identity, claims, timers, reviews]
+    AS <--> DB[(Private Google Sheet)]
+    ADM[Administrator] --> UI
+    ADM -. Review menu .-> DB
+```
 
-1. Choose **Admin review** in the navigation bar.
-2. The review queue defaults to **Pending**. Choose **Approved** to audit and potentially revoke previously accepted claims. You can search by date, Google email, display name or user Subject.
-3. Click **Approve** to accept a pending count. The participant's approved statistics update on their next refresh.
-4. To reject, enter a reason of at least 3 characters, click **Reject**, and confirm. The claim is removed, its day is immediately available to all participants, and the decision is written to `Review Log`.
-5. The queue's count of rejected decisions is an **audit event count**, not a count of permanently unavailable dates; a freed day may be resubmitted later and reviewed again.
+- **GitHub Pages** hosts the responsive HTML/CSS/JavaScript frontend; no always-running Python server is needed.
+- **Google Sign-In** handles participant authentication. Daymark does **not** collect or store Google passwords.
+- **Google Apps Script** verifies identity, coordinates date reservations and deadlines, and enforces administrator permissions.
+- **Google Sheets** keeps user accounts, active claims, timers, and the administrator-only review log.
 
-**Directly in Google Sheets** (admin owner):
+### Spreadsheet structure
 
-1. Open the private spreadsheet on a desktop browser. Select any cell in a **data row** of the **Daily Records** tab.
-2. Choose **Daymark review → Approve selected claim**, or **Daymark review → Reject selected claim…** and enter the reason.
-3. Both operations use the **same Apps Script review function** as the website, recompute user totals and update the audit log. No manual unchecking, cell deletion or status editing is needed.
-4. The Google Sheet menu is only available in a **spreadsheet-bound** Apps Script project. It refuses to run if Apps Script cannot identify the configured administrator from the active Google account. If an admin Subject has not been stored yet, sign in to the website once first (or set `ADMIN_GOOGLE_SUB`).
+| Sheet | Purpose |
+| :--- | :--- |
+| `Users` | Google identity, joined date, and verified totals |
+| `Daily Records` | Active pending/approved claims and recorded counts |
+| `Active Timers` | Start and expiration times for independent sessions |
+| `Review Log` | Approval/rejection decisions and reasons |
 
-Because row deletions change row numbers, select the intended row again before each spreadsheet-menu action. Avoid directly changing the data/status columns: manual edits bypass review/audit logic. If you must repair the Sheet, run `repairAllUserTotals()` afterward and inspect the `Review Log`.
+## 🚀 Getting started
 
-## 5. Google Sheet tabs
+To deploy your own copy:
 
-**`Users`** — `Google Subject`, `Email`, `Display Name`, `Joined UTC`, `Approved Data`, `Approved Days`, `Pending Days`. Only **approved** counts/days contribute to verified totals.
+1. **Host the website:** Fork or upload the project to a GitHub repository and enable GitHub Pages from the repository root.
+2. **Prepare storage:** Create a private Google Sheet and open **Extensions → Apps Script**.
+3. **Install the script:** Copy `apps-script/Code.gs` and its `appsscript.json` manifest into the Apps Script project.
+4. **Configure Google Sign-In:** Create a Google OAuth **Web application** client and authorize your GitHub Pages origin (for example, `https://USERNAME.github.io`, without the repository path).
+5. **Set Apps Script properties:** Supply `SPREADSHEET_ID`, `GOOGLE_CLIENT_ID`, `FRONTEND_ORIGIN`, and `ADMIN_GOOGLE_EMAIL`. You can additionally set `ADMIN_GOOGLE_SUB`.
+6. **Initialize and deploy:** Run `setupSheets()`, then deploy an Apps Script Web App **as you**, with access set to **Anyone** (individual requests are still authenticated by the script).
+7. **Connect the frontend:** Add the public Google OAuth Client ID and Apps Script `/exec` URL to `config.js`, then publish.
 
-**`Daily Records`** — `Google Subject`, `Jalali Date`, `Data Count`, `Created UTC ms`, `Updated UTC ms`, `Review Status` (`PENDING` or `APPROVED`), `Reviewed By Subject`, `Reviewed UTC ms`, `Admin Note`. Contains **only current, unrejected claims**.
+**→ [Full step-by-step deployment and configuration guide](docs/DEPLOYMENT.md)**
 
-**`Active Timers`** — `Google Subject`, `Jalali Date`, `Started UTC ms`, `Expires UTC ms`, `Mode`. Each date can have at most one active owner. Multiple distinct dates can have independent three-minute timers.
+Already using v2? See [UPGRADE_FROM_V2.md](UPGRADE_FROM_V2.md) before migrating existing records.
 
-**`Review Log`** — `Review UTC ms`, `Admin Subject`, `Admin Email`, `Action`, `User Subject`, `Jalali Date`, `Data Count`, `Previous Status`, `Admin Note`, `Record Updated UTC ms`. Records every approval and rejection, including rejected claims no longer present in user history. **Keep this tab private.**
+> **Security:** Keep the Google Sheet private. Never commit spreadsheet edit credentials, Google passwords, OAuth client secrets, or other server-side secrets to GitHub. `config.js` contains *public* client/deployment identifiers only. Google Apps Script Web App URLs are publicly reachable, so the script's per-request authentication and authorization checks are essential.
 
-### No participant passwords are stored
+## 🧪 Run the checks
 
-Google handles the participant's password. The website sends a Google ID token to Apps Script, which verifies the token (including signature via Google's trusted token-info endpoint, `aud`, `iss`, expiry, verified email). The permanent identity is the immutable Google Subject. The administrator's email is verified by the server, never by an untrusted request field. The browser stores the short-lived token in `sessionStorage` for that tab; no spreadsheet write access credentials are sent to the browser.
-
-## 6. Smoke test on your real Google account
-
-1. Sign in as participant A and participant B, and separately as your configured admin.
-2. A selects a date and starts a timer. B sees it as *In progress* and cannot start that same date. A submits a count; B sees the date *Under review*.
-3. A sees a *Pending review* badge; its count does **not** yet appear in the approved-total statistics.
-4. Admin approves the count. A sees an approved badge and updated verified total after refresh. B sees the date as *Claimed*.
-5. Admin switches the review filter to **Approved** and rejects the claim with a reason. After refresh, the date is unchecked for A, gone from A's personal history/CSV, and available to B. The log still retains the original claim and decisions.
-6. B starts that released date and submits a new count. Independently try starting two timers on **different** dates, and verify they do not reset after reload.
-7. Repeat approval/rejection from the Google Sheet `Daymark review` menu to confirm both administrative paths work.
-8. If you had existing v2 data, confirm every old claim is pending until reviewed. If two users previously claimed the same date, reject one before approving the other.
-
-The previous source version (v2) allowed multiple users to claim the same date; v3 **intentionally changes this behavior** to support releasing dates for reassignment after rejection.
-
-## 7. Developer checks
-
-Run from the unzipped project directory with **Node.js 18+**:
+Node.js 18+ is sufficient for the local test suite:
 
 ```bash
 npm test
 npm run check
 ```
 
-Tests use an in-memory Google Sheets/Apps Script simulation. They check the Jalali date range, OAuth verification and admin identity checks, separate accounts, global date reservations, independent/expired timers, admin approval and rejection (including previously approved claims), pending-only edits, optimistic revision checking, migration of the legacy sheet, spreadsheet-native menu decisions, and response encoding.
+The local tests simulate Apps Script and Google Sheets. Always also perform a live smoke test of Google Sign-In, simultaneous timers, record submissions, approvals, and rejections after deployment.
 
-**Live Google Sign-In, the Google Sheets menu and iframe transport cannot be fully tested locally without your own Google configuration.** Always perform the smoke test after publishing. Some restrictive browsers may block embedded Apps Script responses; if that occurs, the iframe-based bridge needs an alternative deployment/transport architecture.
+## 🗂️ Repository layout
 
-To preview the frontend without changing your Google configuration, from the project root run:
-
-```bash
-python -m http.server 8000
+```text
+.
+├── index.html              # Website and views
+├── config.js               # Public Google IDs / deployment URL
+├── assets/                 # Calendar, dashboard, auth, admin and history
+├── apps-script/            # Google Apps Script backend + manifest
+├── previews/               # UI layout previews used above
+├── tests/                  # Local integration tests
+├── docs/DEPLOYMENT.md      # Setup and deployment guide
+└── UPGRADE_FROM_V2.md      # Migration guidance
 ```
 
-Open `http://localhost:8000` (do not use `file://`). For *live* sign-in testing on localhost, include localhost in OAuth Authorized JavaScript origins and temporarily change Apps Script's `FRONTEND_ORIGIN` accordingly.
+## ℹ️ Scope and limitations
 
-## 8. Scale, concurrency and backups
+Daymark is aimed at **small teams**. Google Apps Script and Sheets have usage quotas and concurrency limitations; larger deployments may require a dedicated database and backend. The private spreadsheet should be backed up regularly, and the review log is an operational audit trail rather than an immutable compliance record.
 
-- `LockService.getScriptLock()` serializes writes to timers, claims, and review decisions; a deadline is checked after lock acquisition. The backend uses revision checks so admins cannot approve a stale count after it has been edited.
-- This is a **small-team MVP**. Apps Script/Sheets have quota and speed limitations; a larger/high-traffic system should use a database and a dedicated authentication service. Google's `tokeninfo` endpoint is not recommended for high-volume production verification; a supported server-side JWT verifier is preferable there.
-- Protect your private Sheet, keep backups (especially before running a migration), and consider making a scheduled Google Drive copy of the spreadsheet. `Review Log` is an operational audit trail, **not** an immutable compliance archive against the spreadsheet owner.
-- Apps Script/Sheets writes are not full ACID database transactions. Rare partial failures may require an owner to inspect/reconcile data and re-run `repairAllUserTotals()`.
-- User interface refreshes cannot make the server accept an expired timer. A timer can restart after expiration; submitting after expiration is refused.
-- To apply future Apps Script code edits, create and deploy a **new script version** in the existing deployment so you can keep its `/exec` URL and Sheet data.
+---
+
+<div align="center">
+  <strong>Daymark</strong> · Every date. Every count. Reviewed.
+  <br />
+  <a href="https://ilyazk.github.io/delta_daymark/">Launch website</a> · <a href="docs/DEPLOYMENT.md">Deployment guide</a>
+</div>
